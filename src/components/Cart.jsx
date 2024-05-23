@@ -35,7 +35,7 @@ import CartItem from "./CartItem";
 //         <p className="cart-total">{currencyFormatter.format(cartTotal)}</p>
 //         <p className="modal-actions">
 //             <Button textOnly onClick={userProgress.hideCart}>Close</Button>
-//             {cartItemsContext.items.length &&
+//             {cartItemsContext.items.length > 0 &&
 //                 (
 //                     <Button onClick={userProgress.showCheckout}>Go to checkout</Button>
 //                 )
@@ -56,9 +56,9 @@ export default class Cart extends Component {
         return <UserProgressContext.Consumer>
             {userProgressContext => (
                 <Modal
-                className="cart"
-                open={userProgressContext.progress == USER_PROGRESS_ACTIONS.CART}
-                onClose={userProgressContext.progress == USER_PROGRESS_ACTIONS.CART ? userProgressContext.hideCart : null}
+                    className="cart"
+                    open={userProgressContext.progress == USER_PROGRESS_ACTIONS.CART}
+                    onClose={userProgressContext.progress == USER_PROGRESS_ACTIONS.CART ? userProgressContext.hideCart : null}
                 >
                     <h2>Your cart</h2>
                     <ul>
@@ -77,7 +77,7 @@ export default class Cart extends Component {
                     <p className="cart-total">{currencyFormatter.format(this.totalPrice)}</p>
                     <p className="modal-actions">
                         <Button textOnly onClick={userProgressContext.hideCart}>Close</Button>
-                        {this.context.items.length &&
+                        {this.context.items.length > 0 &&
                             (
                                 <Button onClick={userProgressContext.showCheckout}>Go to checkout</Button>
                             )

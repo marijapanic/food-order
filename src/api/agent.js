@@ -2,16 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 
 export const DOMAIN = "http://localhost:3000";
 
-export function SubmitOrder(orderParams) {
-    fetch(`${DOMAIN}/orders`, {
-        method: 'POST',
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(orderParams)
-    });
-}
-
 async function sendHttpRequest(url, config) {
     const response = await fetch(url, config);
 
@@ -26,10 +16,15 @@ export default function useHttp(url, config, initialData) {
     const [data, setData] = useState(initialData);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState();
-    const sendRequest = useCallback(async function sendRequest() {
+
+    function clearData() {
+        setData(initialData);
+    }
+
+    const sendRequest = useCallback(async function sendRequest(data) {
         try {
             setIsLoading(true);
-            const response = await sendHttpRequest(url, config);
+            const response = await sendHttpRequest(url, { ...config, body: data });
 
             setData(response);
 
@@ -50,6 +45,7 @@ export default function useHttp(url, config, initialData) {
         data,
         isLoading,
         error,
-        sendRequest
+        sendRequest,
+        clearData
     }
 }

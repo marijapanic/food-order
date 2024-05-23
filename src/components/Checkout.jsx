@@ -5,11 +5,19 @@ import { currencyFormatter } from "../utils/formatting";
 import Input from "./UI/Input";
 import Button from "./UI/Button";
 import UserProgressContext, { USER_PROGRESS_ACTIONS } from "../store/UserProgressContext";
-import { SubmitOrder } from "../api/agent.js";
+import useHttp, { DOMAIN } from "../api/agent.js";
+import Error from "./UI/Error.jsx";
 
+const requestConfig = {
+    method: 'POST',
+    headers: {
+        "Content-Type": "application/json"
+    }
+}
 // export default function Checkout() {
 //     const cartContext = useContext(CartContext);
 //     const userContext = useContext(UserProgressContext);
+//     const { data, isLoading, error, sendRequest, clearData } = useHttp(`${DOMAIN}/orders`, requestConfig);
 
 //     const cartTotal = cartContext
 //         .items
@@ -17,6 +25,12 @@ import { SubmitOrder } from "../api/agent.js";
 
 //     function handleClose() {
 //         userContext.hideCheckout();
+//     }
+
+//     function handleFinish() {
+//         userContext.hideCheckout();
+//         cartContext.clearCart();
+//         clearData();
 //     }
 
 //     function handleOpenCheckout() {
@@ -29,13 +43,37 @@ import { SubmitOrder } from "../api/agent.js";
 //         const formData = new FormData(event.target);
 //         const customerData = Object.fromEntries(formData.entries());
 
-//         SubmitOrder({
+//         sendRequest(JSON.stringify({
 //             order: {
 //                 items: cartContext.items,
 //                 customer: customerData
 //             }
-//         });
+//         }));
 //     }
+
+//     let actions = (
+//         <>
+//             <Button textOnly type="button" onClick={handleClose}>Close</Button>
+//             <Button onClick={handleOpenCheckout}>Submit Order</Button>
+//         </>
+//     );
+
+//     if (isLoading) {
+//         actions = <span>Sending order data</span>
+//     }
+
+//     if (data && !error) {
+//         return <Modal
+//             open={userContext.progress == USER_PROGRESS_ACTIONS.CHECKOUT}
+//             onClose={userContext.handleFinish}>
+//             <h2>Success</h2>
+//             <p>Your order was submitted successfully</p>
+//             <p className="modal-actions">
+//                 <Button onClick={handleFinish}>Okay</Button>
+//             </p>
+//         </Modal>
+//     }
+
 //     return (
 //         <Modal
 //             open={userContext.progress == USER_PROGRESS_ACTIONS.CHECKOUT}
@@ -52,9 +90,9 @@ import { SubmitOrder } from "../api/agent.js";
 //                     <Input label="City" type="text" id="city"></Input>
 //                 </div>
 
+//                 {error && <Error title="Failed to submit order" message={error}></Error>}
 //                 <p className="modal-actions">
-//                     <Button textOnly type="button" onClick={handleClose}>Close</Button>
-//                     <Button onClick={handleOpenCheckout}>Submit Order</Button>
+//                     {actions}
 //                 </p>
 //             </form>
 //         </Modal>
@@ -64,10 +102,45 @@ import { SubmitOrder } from "../api/agent.js";
 export default class Checkout extends Component {
     static contextType = CartContext;
 
+    constructor() {
+        super();
+        this.state = {
+            data: null,
+            isLoading: false,
+            error: null
+        }
+    }
+
     get totalPrice() {
         return this.context
             .items
             .reduce((totalPrice, item) => totalPrice + item.price * item.quantity, 0);
+    }
+
+    async submitOrder(orderParams) {
+        this.setState({ isLoading: true, error: null });
+        const fetchedResponse = await fetch(`${DOMAIN}/orderss`, {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(orderParams)
+        });
+
+        if (!fetchedResponse.ok) {
+            this.setState({
+                isLoading: false,
+                error: `Failed to fetch. Status: ${fetchedResponse.status}`
+            });
+            return;
+        }
+
+        const response = await fetchedResponse.json();
+
+        this.setState({
+            isLoading: false,
+            data: response
+        });
     }
 
     handleSubmit(event) {
@@ -76,7 +149,7 @@ export default class Checkout extends Component {
         const formData = new FormData(event.target);
         const customerData = Object.fromEntries(formData.entries());
 
-        SubmitOrder({
+        this.submitOrder({
             order: {
                 items: this.context.items,
                 customer: customerData
@@ -84,7 +157,31 @@ export default class Checkout extends Component {
         });
     }
 
+    handleFinish(hideCheckout) {
+        hideCheckout();
+        this.context.clearCart();
+        this.setState({ data: null })
+    }
+
     render() {
+
+        if (this.state.data && !this.state.error) {
+            return (
+                <UserProgressContext.Consumer>
+                    {userProgressContext => (
+                        <Modal
+                            open={userProgressContext.progress == USER_PROGRESS_ACTIONS.CHECKOUT}
+                            onClose={this.handleFinish.bind(this, userProgressContext.hideCheckout)}>
+                            <h2>Success</h2>
+                            <p>Your order was submitted successfully</p>
+                            <p className="modal-actions">
+                                <Button onClick={this.handleFinish.bind(this, userProgressContext.hideCheckout)}>Okay</Button>
+                            </p>
+                        </Modal>
+                    )}
+                </UserProgressContext.Consumer>
+            )
+        }
         return (
             <UserProgressContext.Consumer>
                 {userProgressContext => (
@@ -102,10 +199,14 @@ export default class Checkout extends Component {
                                 <Input label="Postal Code" type="text" id="postal-code"></Input>
                                 <Input label="City" type="text" id="city"></Input>
                             </div>
-
+                            {this.state.error && <Error title="Failed to submit order" message={this.state.error}></Error>}
                             <p className="modal-actions">
-                                <Button textOnly type="button" onClick={userProgressContext.hideCheckout}>Close</Button>
-                                <Button onClick={userProgressContext.showCheckout}>Submit Order</Button>
+                                {this.state.isLoading ? <span>Sending order data</span> :
+                                    <>
+                                        <Button textOnly type="button" onClick={userProgressContext.hideCheckout}>Close</Button>
+                                        <Button onClick={userProgressContext.showCheckout}>Submit Order</Button>
+                                    </>
+                                }
                             </p>
                         </form>
                     </Modal>
