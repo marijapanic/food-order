@@ -1,27 +1,16 @@
 import { Component, useEffect, useState } from "react";
 import MealItem from "./MealItem";
+import useHttp, { DOMAIN } from "../api/agent";
+
+const requestConfig = {};
 
 // export default function Meals() {
-//     const [loadedMeals, setLoadedMeals] = useState([]);
-//     const [isLoading, setIsLoading] = useState(true);
-
-//     useEffect(() => {
-//         async function fetchMeals() {
-//             try {
-//                 const fetchedResponse = await fetch("http://localhost:3000/meals");
-//                 const meals = await fetchedResponse.json();
-//                 setLoadedMeals(meals);
-//             } finally {
-//                 setIsLoading(false);
-//             };
-//         }
-//         fetchMeals();
-//     }, []);
+//     const { data: loadedMeals, isLoading, error } = useHttp(`${DOMAIN}/meals`, requestConfig, []);
 
 //     return <ul id="meals">
-//         {isLoading && "Please wait"}
+//         {isLoading && <p className="center">Please wait</p>}
 //         {loadedMeals.length > 0 && loadedMeals.map((item, index) =>
-//             <li key={index}>{item.name}</li>
+//             <MealItem key={index} {...item}></MealItem>
 //         )}
 //         {!loadedMeals.length && !isLoading && "There are now  meals in the database."}
 //     </ul>
@@ -42,7 +31,7 @@ export default class Meals extends Component {
 
     async fetchMeals() {
         try {
-            const fetchedResponse = await fetch("http://localhost:3000/meals");
+            const fetchedResponse = await fetch(`${DOMAIN}/meals`);
             const meals = await fetchedResponse.json();
             this.setState({
                 mealList: meals

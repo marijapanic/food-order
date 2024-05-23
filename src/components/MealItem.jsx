@@ -1,8 +1,8 @@
 import { Component, useContext } from "react";
-import resourceLink from "../api/agent";
 import { currencyFormatter } from "../utils/formatting";
 import Button from "./UI/Button";
 import CartContext from "../store/CartContext";
+import { DOMAIN } from "../api/agent";
 
 // export default function MealItem(props)
 // {
@@ -15,7 +15,7 @@ import CartContext from "../store/CartContext";
 //     return (
 //         <li className="meal-item">
 //             <article>
-//                 <img src={resourceLink(props.image)} alt={props.name}></img>
+//                 <img src={`${DOMAIN}/${imgSrc}`} alt={props.name}></img>
 //                 <div>
 //                     <h3>{props.name}</h3>
 //                     <p className="meal-item-price">{currencyFormatter.format(props.price)}</p>
@@ -48,7 +48,7 @@ export default class MealItem extends Component
         return (
             <li className="meal-item">
                 <article>
-                    <img src={resourceLink(this.props.image)} alt={this.props.name}></img>
+                    <img src={`${DOMAIN}/${this.props.image}`} alt={this.props.name}></img>
                     <div>
                         <h3>{this.props.name}</h3>
                         <p className="meal-item-price">{currencyFormatter.format(this.props.price)}</p>
